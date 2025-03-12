@@ -37,7 +37,7 @@ New-Item -ItemType Directory -Force -Path @(
     "zbx_env/etc/zabbix/zabbix_proxy.d",
     "zbx_env/var/lib/zabbix/proxy-db/version-$env:ZABBIX_MAJOR_VERSION",
     "zbx_env/var/lib/postgresql/data/version-$env:ZABBIX_MAJOR_VERSION",
-    "zbx_env/var/lib/grafana",
+    "zbx_env/var/lib/grafana/version-$env:ZABBIX_MAJOR_VERSION",
     "zbx_env/python",
     "grafana/provisioning/datasources",
     "grafana/provisioning/dashboards",
