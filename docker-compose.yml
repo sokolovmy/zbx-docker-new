@@ -110,7 +110,7 @@ services:
   grafana:
     image: grafana/grafana:${GRAFANA_VERSION}
     volumes:
-      - ./zbx_env/var/lib/grafana:/var/lib/grafana
+      - ./zbx_env/var/lib/grafana/version-${ZABBIX_MAJOR_VERSION}:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     restart: always
     environment:

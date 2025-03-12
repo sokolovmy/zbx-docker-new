@@ -31,7 +31,7 @@ mkdir -p zbx_env/etc/zabbix/zabbix_agentd.d
 mkdir -p zbx_env/etc/zabbix/zabbix_proxy.d
 mkdir -p "zbx_env/var/lib/zabbix/proxy-db/version-$ZABBIX_MAJOR_VERSION"
 mkdir -p "zbx_env/var/lib/postgresql/data/version-$ZABBIX_MAJOR_VERSION"
-mkdir -p zbx_env/var/lib/grafana
+mkdir -p "zbx_env/var/lib/grafana/version-$ZABBIX_MAJOR_VERSION"
 mkdir -p zbx_env/python
 mkdir -p grafana/provisioning/datasources
 mkdir -p grafana/provisioning/dashboards
