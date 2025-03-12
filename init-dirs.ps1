@@ -13,10 +13,10 @@ if (Test-Path .env) {
 
 # Set default versions if not defined
 if (-not $env:ZABBIX_MAJOR_VERSION) {
-    $env:ZABBIX_MAJOR_VERSION = "5.0"
+    $env:ZABBIX_MAJOR_VERSION = "6.0"
 }
 if (-not $env:ZABBIX_MINOR_VERSION) {
-    $env:ZABBIX_MINOR_VERSION = "46"
+    $env:ZABBIX_MINOR_VERSION = "39"
 }
 
 Write-Host "Creating directories for Zabbix version $env:ZABBIX_MAJOR_VERSION.$env:ZABBIX_MINOR_VERSION"
@@ -37,7 +37,7 @@ New-Item -ItemType Directory -Force -Path @(
     "zbx_env/etc/zabbix/zabbix_proxy.d",
     "zbx_env/var/lib/zabbix/proxy-db/version-$env:ZABBIX_MAJOR_VERSION",
     "zbx_env/var/lib/postgresql/data/version-$env:ZABBIX_MAJOR_VERSION",
-    "zbx_env/var/lib/grafana",
+    "zbx_env/var/lib/grafana/version-$env:ZABBIX_MAJOR_VERSION",
     "zbx_env/python",
     "grafana/provisioning/datasources",
     "grafana/provisioning/dashboards",
