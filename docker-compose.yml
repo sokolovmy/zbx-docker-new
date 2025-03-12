@@ -1,0 +1,167 @@
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:ubuntu-${ZABBIX_MAJOR_VERSION}.${ZABBIX_MINOR_VERSION}
+    ports:
+      - "10051:10051"
+    volumes:
+      - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
+      - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
+      - ./zbx_env/var/lib/zabbix/export:/var/lib/zabbix/export:rw
+      - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
+      - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
+      - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
+      - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro
+      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:ro
+    restart: always
+    depends_on:
+      - postgres-server
+    environment:
+      - DB_SERVER_HOST=postgres-server
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - ZBX_HISTORYSTORAGE_BACKEND=timescaledb
+      - ZBX_DEBUGLEVEL=3
+    networks:
+      - zbx_net
+    user: root
+
+  zabbix-proxy:
+    build:
+      context: ./zbx_proxy
+      args:
+        ZABBIX_MAJOR_VERSION: ${ZABBIX_MAJOR_VERSION}
+        ZABBIX_MINOR_VERSION: ${ZABBIX_MINOR_VERSION}
+    ports:
+      - "10052:10051"
+    volumes:
+      - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
+      - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:ro
+      - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:ro
+      - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:ro
+      - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro
+      - ./zbx_env/etc/zabbix/zabbix_proxy.d:/etc/zabbix/zabbix_proxy.d:ro
+      - ./zbx_env/var/lib/zabbix/proxy-db:/var/lib/zabbix/proxy-db:rw
+      - ./zbx_env/python:/usr/lib/python3/site-packages:ro
+    restart: always
+    environment:
+      - ZBX_PROXYMODE=0
+      - ZBX_HOSTNAME=zabbix-proxy
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_DEBUGLEVEL=3
+      - ZBX_TIMEOUT=30
+    networks:
+      - zbx_net
+    depends_on:
+      - zabbix-server
+    user: root
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:ubuntu-${ZABBIX_MAJOR_VERSION}.${ZABBIX_MINOR_VERSION}
+    volumes:
+      - ./zbx_env/etc/ssl/nginx:/etc/ssl/nginx:ro
+      - ./zbx_env/usr/share/zabbix/modules/:/usr/share/zabbix/modules/:ro
+    restart: always
+    depends_on:
+      - postgres-server
+      - zabbix-server
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - DB_SERVER_HOST=postgres-server
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PHP_TZ=${PHP_TZ}
+      - ZBX_SERVER_NAME=Zabbix
+      - ZBX_SERVER_ROOT_URL=/zabbix
+    networks:
+      - zbx_net
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:ubuntu-${ZABBIX_MAJOR_VERSION}.${ZABBIX_MINOR_VERSION}
+    ports:
+      - "10050:10050"
+    volumes:
+      - ./zbx_env/etc/zabbix/zabbix_agentd.d:/etc/zabbix/zabbix_agentd.d:ro
+    restart: always
+    privileged: true
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_HOSTNAME=zabbix-agent
+      - ZBX_SERVER_PORT=10051
+    networks:
+      - zbx_net
+    user: root
+
+  postgres-server:
+    image: timescale/timescaledb:${TIMESCALEDB_TAG}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./zbx_env/var/lib/postgresql/data/version-${ZABBIX_MAJOR_VERSION}:/var/lib/postgresql/data:rw
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    restart: always
+    networks:
+      - zbx_net
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    volumes:
+      - ./zbx_env/var/lib/grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    restart: always
+    environment:
+      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    ports:
+      - "3001:3000"
+    networks:
+      - zbx_net
+    depends_on:
+      - zabbix-server
+      - zabbix-web
+      - zabbix-proxy
+      - zabbix-agent
+
+  zbx-setup:
+    image: python:3.8-alpine
+    volumes:
+      - ./zbx_setup.py:/app/zbx_setup.py
+    working_dir: /app
+    command: sh -c "pip install requests zabbix-utils && python zbx_setup.py"
+    depends_on:
+      - zabbix-server
+      - zabbix-web
+      - zabbix-proxy
+      - zabbix-agent
+    restart: on-failure:5
+    networks:
+      - zbx_net
+
+  nginx-gateway:
+    image: nginx:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/html:/usr/share/nginx/html
+    depends_on:
+      - zabbix-web
+      - grafana
+    restart: always
+    networks:
+      - zbx_net
+
+networks:
+  zbx_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
