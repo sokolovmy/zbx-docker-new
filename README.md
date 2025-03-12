@@ -47,7 +47,7 @@
 
 - **Стартовая страница**: http://localhost:3000
 - **Zabbix Web-интерфейс**: http://localhost:3000/zabbix/
-- **Grafana**: http://localhost:3001
+- **Grafana**: http://localhost:3000/grafana/
 
 ## Учётные данные по умолчанию
 
