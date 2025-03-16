@@ -17,6 +17,7 @@ fi
 echo "Creating directories for Zabbix version $ZABBIX_MAJOR_VERSION.$ZABBIX_MINOR_VERSION"
 
 # Creating directory structure for Zabbix
+mkdir -p zbx_env/logs
 mkdir -p zbx_env/usr/lib/zabbix/alertscripts
 mkdir -p zbx_env/usr/lib/zabbix/externalscripts
 mkdir -p zbx_env/var/lib/zabbix/export

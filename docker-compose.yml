@@ -17,6 +17,7 @@ services:
       - ./zbx_env/var/lib/zabbix/mibs:/var/lib/zabbix/mibs:ro
       - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:ro
       - ./zbx_env/python:/usr/lib/python3/site-packages:ro
+      - ./zbx_env/logs:/opt/zabbix/log:rw
     restart: always
     depends_on:
       - postgres-server
@@ -48,6 +49,7 @@ services:
       - ./zbx_env/etc/zabbix/zabbix_proxy.d:/etc/zabbix/zabbix_proxy.d:ro
       - ./zbx_env/var/lib/zabbix/proxy-db:/var/lib/zabbix/proxy-db:rw
       - ./zbx_env/python:/usr/lib/python3/site-packages:ro
+      - ./zbx_env/logs:/opt/zabbix/log:rw
     restart: always
     environment:
       - ZBX_PROXYMODE=0
