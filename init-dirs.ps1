@@ -23,6 +23,7 @@ Write-Host "Creating directories for Zabbix version $env:ZABBIX_MAJOR_VERSION.$e
 
 # Creating directory structure for Zabbix
 New-Item -ItemType Directory -Force -Path @(
+    "zbx_env/logs",
     "zbx_env/usr/lib/zabbix/alertscripts",
     "zbx_env/usr/lib/zabbix/externalscripts",
     "zbx_env/var/lib/zabbix/export",
