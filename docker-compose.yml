@@ -28,6 +28,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - ZBX_HISTORYSTORAGE_BACKEND=timescaledb
       - ZBX_DEBUGLEVEL=3
+      - ZBX_CACHESIZE=100M
     networks:
       - zbx_net
     user: root
@@ -82,6 +83,7 @@ services:
       - PHP_TZ=${PHP_TZ}
       - ZBX_SERVER_NAME=Zabbix
       - ZBX_SERVER_ROOT_URL=/zabbix
+      - ZBX_MEMORYLIMIT=1024M
     networks:
       - zbx_net
 
