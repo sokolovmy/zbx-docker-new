@@ -11,5 +11,6 @@ datasources:
       zabbixVersion: 5.0.x
       trendsFrom: "7d"
       trendsRange: "4d"
+      cacheTTL: "1m"
     secureJsonData:
       password: zabbix

@@ -1,10 +1,11 @@
 services:
   zabbix-server:
-    build:
-      context: ./zbx_server
-      args:
-        ZABBIX_MAJOR_VERSION: ${ZABBIX_MAJOR_VERSION}
-        ZABBIX_MINOR_VERSION: ${ZABBIX_MINOR_VERSION}
+    # build:
+      # context: ./zbx_server
+      # args:
+      #   ZABBIX_MAJOR_VERSION: ${ZABBIX_MAJOR_VERSION}
+      #   ZABBIX_MINOR_VERSION: ${ZABBIX_MINOR_VERSION}
+    image: zabbix/zabbix-server-pgsql:ubuntu-${ZABBIX_MAJOR_VERSION}.${ZABBIX_MINOR_VERSION}
     ports:
       - "10051:10051"
     volumes:
@@ -29,16 +30,18 @@ services:
       - ZBX_HISTORYSTORAGE_BACKEND=timescaledb
       - ZBX_DEBUGLEVEL=3
       - ZBX_CACHESIZE=100M
+      - TZ=${PHP_TZ}
     networks:
       - zbx_net
     user: root
 
   zabbix-proxy:
-    build:
-      context: ./zbx_proxy
-      args:
-        ZABBIX_MAJOR_VERSION: ${ZABBIX_MAJOR_VERSION}
-        ZABBIX_MINOR_VERSION: ${ZABBIX_MINOR_VERSION}
+    # build:
+    #   context: ./zbx_proxy
+    #   args:
+    #     ZABBIX_MAJOR_VERSION: ${ZABBIX_MAJOR_VERSION}
+    #     ZABBIX_MINOR_VERSION: ${ZABBIX_MINOR_VERSION}
+    image: zabbix/zabbix-proxy-sqlite3:ubuntu-${ZABBIX_MAJOR_VERSION}.${ZABBIX_MINOR_VERSION}
     ports:
       - "10052:10052"
     volumes:
@@ -59,6 +62,7 @@ services:
       - ZBX_LISTENPORT=10052
       - ZBX_DEBUGLEVEL=3
       - ZBX_TIMEOUT=30
+      - TZ=${PHP_TZ}
     networks:
       - zbx_net
     depends_on:
@@ -84,6 +88,7 @@ services:
       - ZBX_SERVER_NAME=Zabbix
       - ZBX_SERVER_ROOT_URL=/zabbix
       - ZBX_MEMORYLIMIT=1024M
+      - TZ=${PHP_TZ}
     networks:
       - zbx_net
 
@@ -99,6 +104,7 @@ services:
       - ZBX_SERVER_HOST=zabbix-server,zabbix-proxy
       - ZBX_HOSTNAME=zabbix-agent
       - ZBX_SERVER_PORT=10051
+      - TZ=${PHP_TZ}
     networks:
       - zbx_net
     user: root
@@ -113,6 +119,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=${PHP_TZ}
     restart: always
     networks:
       - zbx_net
@@ -129,6 +136,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - TZ=${PHP_TZ}
     ports:
       - "3001:3000"
     networks:
@@ -156,6 +164,8 @@ services:
 
   nginx-gateway:
     image: nginx:latest
+    environment:
+      - TZ=${PHP_TZ}
     ports:
       - "3000:3000"
     volumes:
@@ -167,6 +177,18 @@ services:
     restart: always
     networks:
       - zbx_net
+
+  sshd-host:
+    build: ./sshd_host
+    ports:
+      - "22022:22"
+    volumes:
+      - ./zbx_env/usr/local/bin:/usr/local/bin
+    environment:
+      - USERNAME=${USERNAME}
+      - PASSWORD=${PASSWORD}
+      - TZ=${PHP_TZ}
+    command: ["/entrypoint.sh"]
 
 networks:
   zbx_net:

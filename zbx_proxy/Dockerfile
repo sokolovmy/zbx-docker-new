@@ -18,11 +18,11 @@ RUN set -eux && \
 COPY requirements.txt /tmp/requirements.txt
 
 # Устанавливаем Python зависимости
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
-    rm -f /tmp/requirements.txt
+# RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
+#     rm -f /tmp/requirements.txt
 
-# Указываем, что образ уже содержит Python
-ENV PYTHON_INSTALLED=true
+# # Указываем, что образ уже содержит Python
+# ENV PYTHON_INSTALLED=true
 
 # Возвращаемся к пользователю zabbix
 USER 1997
